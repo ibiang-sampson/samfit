@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Samfit - Premium Fitness Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                DEFAULT: '#dc2626', // red-600
+                dark: '#991b1b',    // red-800
+                black: '#171717',   // neutral-900 (used for dark mode bg)
+                gray: '#262626',    // neutral-800 (used for dark mode cards)
+                light: '#f5f5f5',   // neutral-100
+                white: '#ffffff',
+              }
+            },
+            fontFamily: {
+              sans: ['Roboto', 'sans-serif'],
+              display: ['Teko', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #dc2626;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #991b1b;
+      }
+      
+      /* Smooth theme transition */
+      body {
+        transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 300ms;
+      }
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "framer-motion": "https://aistudiocdn.com/framer-motion@^12.23.24",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.6",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@0.2.1",
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js",
+    "firebase/storage": "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/"
+  }
+}
+</script>
+</head>
+  <body class="bg-white text-gray-900 dark:bg-neutral-900 dark:text-white">
+    <div id="root"></div>
+  </body>
+</html>
