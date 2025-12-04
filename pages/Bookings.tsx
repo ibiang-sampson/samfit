@@ -43,13 +43,14 @@ Samfit Team`;
       const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : undefined;
 
       if (apiKey) {
-        // Use dynamic import to avoid initial load errors if module resolution fails
-        const { GoogleGenAI } = await import("@google/genai");
-        const ai = new GoogleGenAI({ apiKey });
+        // Use dynamic import for the official SDK
+        const { GoogleGenerativeAI } = await import("@google/generative-ai");
+        const genAI = new GoogleGenerativeAI(apiKey);
         
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: `Write a friendly, high-energy confirmation email for a gym session booking. 
+        // Use standard stable model
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        
+        const prompt = `Write a friendly, high-energy confirmation email for a gym session booking. 
             Do not include placeholders. Use the provided data below.
             
             Booking Details:
@@ -60,11 +61,14 @@ Samfit Team`;
             - Time: ${formData.time}
             
             The email should be professional but motivating. Mention bringing a towel and water bottle.
-            Format it clearly with a Subject line.`,
-        });
+            Format it clearly with a Subject line.`;
 
-        if (response.text) {
-          finalEmailContent = response.text;
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+
+        if (text) {
+          finalEmailContent = text;
         }
       }
     } catch (error) {
