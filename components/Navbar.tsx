@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Dumbbell, Sun, Moon, LogIn, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { Menu, X, Dumbbell, Sun, Moon, LogIn, User, LogOut, LayoutDashboard, ShieldCheck } from 'lucide-react';
 import { NAV_LINKS } from '../constants';
 import { auth } from '../firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -103,6 +103,22 @@ const Navbar: React.FC = () => {
                   {link.name}
                 </NavLink>
               ))}
+              
+              {user && (
+                 <NavLink
+                  to="/admin"
+                  className={({ isActive }) =>
+                    `px-3 py-2 rounded-md text-sm font-bold flex items-center space-x-1 transition-colors duration-200 ${
+                      isActive
+                        ? 'text-brand'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-brand dark:hover:text-brand'
+                    }`
+                  }
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Admin</span>
+                </NavLink>
+              )}
             </div>
             
             <button 
@@ -166,6 +182,15 @@ const Navbar: React.FC = () => {
                 {link.name}
               </NavLink>
             ))}
+            
+            {user && (
+               <NavLink
+                to="/admin"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-brand dark:hover:text-brand"
+              >
+                Admin Panel
+              </NavLink>
+            )}
             
             <div className="pt-4 mt-4 border-t border-gray-100 dark:border-white/5">
               {user ? (

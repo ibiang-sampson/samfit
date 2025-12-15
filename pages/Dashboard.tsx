@@ -1,35 +1,61 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 import { signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { LogOut, User as UserIcon, Calendar, Settings, CreditCard, Activity, ArrowRight, Shield, ArrowUpCircle } from 'lucide-react';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { LogOut, User as UserIcon, Calendar, Settings, CreditCard, Activity, ArrowRight, Shield } from 'lucide-react';
 import { PRICING_PLANS } from '../constants';
 
 const Dashboard: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedPlanId, setSelectedPlanId] = useState<number>(PRICING_PLANS[2].id); // Default to Premium
+  const [selectedPlanId, setSelectedPlanId] = useState<number>(PRICING_PLANS[2].id);
   const navigate = useNavigate();
 
   // Dynamic Date calculation: 30 days from now
   const [expiryDate, setExpiryDate] = useState('');
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
+        
+        // Listen to Firestore updates
+        try {
+          const unsubscribeSnapshot = onSnapshot(
+            doc(db, "samfit__user", currentUser.uid), 
+            (doc) => {
+              if (doc.exists()) {
+                setUserData(doc.data());
+              }
+              setLoading(false);
+            },
+            (error) => {
+              // Log code and message safely to avoid circular JSON error
+              console.warn("Firestore access error (using auth profile instead):", error.code, error.message);
+              // CRITICAL: Ensure loading is set to false even if firestore permission is denied
+              setLoading(false);
+            }
+          );
+          
+          return () => unsubscribeSnapshot();
+        } catch (e) {
+          console.warn("Error setting up snapshot listener");
+          setLoading(false);
+        }
       } else {
+        // Only redirect if explicitly checked and no user found
         navigate('/login');
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    // Set a dynamic future date
     const date = new Date();
     date.setDate(date.getDate() + 30);
     setExpiryDate(date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }));
 
-    return () => unsubscribe();
+    return () => unsubscribeAuth();
   }, [navigate]);
 
   const handleLogout = async () => {
@@ -55,6 +81,11 @@ const Dashboard: React.FC = () => {
       </div>
     );
   }
+
+  // Helper to get display image (prioritize Firestore, then Auth, then default)
+  const profileImage = userData?.photoURL || user?.photoURL;
+  const displayName = userData?.name || user?.displayName || 'Member';
+  const displayEmail = userData?.email || user?.email;
 
   return (
     <div className="pt-20 min-h-screen bg-brand-light dark:bg-brand-black transition-colors duration-300">
@@ -85,17 +116,28 @@ const Dashboard: React.FC = () => {
           >
             <div className="flex flex-col items-center text-center">
               <div className="w-24 h-24 bg-brand/10 dark:bg-brand/20 rounded-full flex items-center justify-center mb-6 border-4 border-white dark:border-brand-gray shadow-sm overflow-hidden">
-                {user?.photoURL ? (
-                  <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                {profileImage ? (
+                  <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                   <UserIcon className="h-10 w-10 text-brand" />
                 )}
               </div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                {user?.displayName || 'Member'}
+                {displayName}
               </h2>
-              <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm">{user?.email}</p>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm">{displayEmail}</p>
               
+              <div className="w-full text-left space-y-2 mb-6 text-sm text-gray-600 dark:text-gray-300">
+                 <div className="flex justify-between border-b border-gray-100 dark:border-white/5 pb-2">
+                    <span className="font-bold">Phone:</span>
+                    <span>{userData?.phone || '-'}</span>
+                 </div>
+                 <div className="flex justify-between border-b border-gray-100 dark:border-white/5 pb-2">
+                    <span className="font-bold">Program:</span>
+                    <span className="truncate max-w-[150px]">{userData?.program || '-'}</span>
+                 </div>
+              </div>
+
               <div className="w-full space-y-3">
                 <Link to="/edit-profile" className="w-full flex items-center justify-center space-x-2 bg-gray-50 dark:bg-white/5 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-gray-200 font-medium text-sm">
                   <Settings className="h-4 w-4" />
@@ -122,7 +164,7 @@ const Dashboard: React.FC = () => {
                     <div className="p-2 bg-white/20 rounded-lg"><Activity className="h-6 w-6 text-white" /></div>
                     <span className="font-bold uppercase tracking-wider text-sm opacity-90">Current Plan</span>
                   </div>
-                  <h3 className="text-3xl font-display font-bold mb-1">STANDARD</h3>
+                  <h3 className="text-3xl font-display font-bold mb-1">{userData?.membership?.toUpperCase() || 'STANDARD'}</h3>
                   <p className="text-white/80 text-sm">Active until {expiryDate}</p>
                 </div>
                 
@@ -171,7 +213,7 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Recent Activity / Placeholder */}
+            {/* Quick Actions */}
             <div 
               className="bg-white dark:bg-brand-gray rounded-3xl p-8 shadow-xl border border-gray-100 dark:border-white/5"
             >

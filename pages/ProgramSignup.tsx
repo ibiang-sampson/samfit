@@ -1,20 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { PROGRAMS, PRICING_PLANS } from '../constants';
-import { CheckCircle, Loader, ArrowRight, Dumbbell, ShieldCheck, Lock, Upload, AlertCircle, Eye, EyeOff, LayoutDashboard } from 'lucide-react';
-import { auth } from '../firebase';
-import { createUserWithEmailAndPassword, sendEmailVerification, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { CheckCircle, Loader, Upload, AlertCircle, Eye, EyeOff, Lock, User as UserIcon, X } from 'lucide-react';
+import { auth, storage } from '../firebase';
+import { createUserWithEmailAndPassword, sendEmailVerification, signOut, GoogleAuthProvider, signInWithPopup, updateProfile } from 'firebase/auth';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const ProgramSignup: React.FC = () => {
-  const location = useLocation();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
-    program: '',
-    membership: '',
     password: '',
     confirmPassword: ''
   });
@@ -24,16 +19,7 @@ const ProgramSignup: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  useEffect(() => {
-    if (location.state?.programTitle) {
-      setFormData(prev => ({ ...prev, program: location.state.programTitle }));
-    }
-    if (location.state?.membershipPlan) {
-      setFormData(prev => ({ ...prev, membership: location.state.membershipPlan }));
-    }
-  }, [location.state]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError(null);
   };
@@ -52,8 +38,22 @@ const ProgramSignup: React.FC = () => {
       await signInWithPopup(auth, provider);
       navigate('/dashboard');
     } catch (err: any) {
-      console.error("Google Sign Up Error:", err);
-      setError("Failed to sign up with Google. Please try again.");
+      if (err.code === 'auth/popup-closed-by-user') {
+        return; 
+      }
+
+      // Log only safe properties to avoid circular structure errors
+      console.error("Google Sign Up Error:", err.code ? err.code : "Unknown", err.message ? err.message : "");
+      
+      if (err.code === 'auth/unauthorized-domain') {
+        setError(`Configuration Error: Domain ${window.location.hostname} is not authorized in Firebase Console.`);
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        setError("Sign up process interrupted. Please try again.");
+      } else if (err.code === 'auth/network-request-failed') {
+        setError("Network error. Please check your internet connection.");
+      } else {
+        setError("Failed to sign up with Google. Please try again.");
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -79,9 +79,29 @@ const ProgramSignup: React.FC = () => {
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const user = userCredential.user;
+
+      let photoURL = null;
+      if (photo) {
+        try {
+          // Create a reference to 'profile_photos/<uid>/<filename>'
+          const photoRef = ref(storage, `profile_photos/${user.uid}/${Date.now()}_${photo.name}`);
+          const snapshot = await uploadBytes(photoRef, photo);
+          photoURL = await getDownloadURL(snapshot.ref);
+        } catch (storageError) {
+          console.warn("Failed to upload photo:", storageError);
+          // Proceed without photo if upload fails
+        }
+      }
+
+      // Update profile with name and photo
+      await updateProfile(user, { 
+        displayName: formData.name,
+        photoURL: photoURL
+      });
       
       // Send verification email
-      await sendEmailVerification(userCredential.user);
+      await sendEmailVerification(user);
 
       // Sign out immediately so they aren't logged in
       await signOut(auth);
@@ -90,11 +110,17 @@ const ProgramSignup: React.FC = () => {
       navigate('/email-verification', { state: { email: formData.email } });
 
     } catch (err: any) {
-      console.error("Registration error:", err);
-      if (err.code === 'auth/email-already-in-use') {
+      // Log only safe properties to prevent circular JSON error
+      const errorCode = err.code || 'unknown';
+      const errorMessage = err.message || 'Unknown error';
+      console.error("Registration error:", errorCode, errorMessage);
+      
+      if (errorCode === 'auth/email-already-in-use') {
         setError('USER_EXISTS');
+      } else if (errorCode === 'auth/network-request-failed') {
+        setError('Network error. Please check your connection.');
       } else {
-        setError(err.message || 'Failed to create account. Please try again.');
+        setError(errorMessage || 'Failed to create account. Please try again.');
       }
     } finally {
       setIsProcessing(false);
@@ -103,31 +129,37 @@ const ProgramSignup: React.FC = () => {
 
   return (
     <div className="pt-20">
+      {/* Error Popup */}
+      {error && (
+        <div className="fixed top-24 right-4 left-4 md:left-auto md:right-8 z-50 md:max-w-md animate-[slideIn_0.3s_ease-out]">
+          <div className="bg-white dark:bg-neutral-800 border-l-4 border-red-500 shadow-2xl rounded-r-lg p-4 flex items-start">
+            <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-3 shrink-0" />
+            <div className="flex-grow">
+              <h3 className="text-red-500 font-bold text-sm uppercase">Registration Error</h3>
+              {error === 'USER_EXISTS' ? (
+                <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                  User already exists. <Link to="/login" className="font-bold underline text-brand hover:text-brand-dark ml-1">Sign in?</Link>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{error}</p>
+              )}
+            </div>
+            <button onClick={() => setError(null)} className="text-gray-400 hover:text-gray-900 dark:hover:text-white ml-4">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
         {/* Form Side */}
         <div className="bg-white dark:bg-brand-black p-8 md:p-16 lg:p-24 flex flex-col justify-center transition-colors duration-300 order-2 lg:order-1">
           <div className="mb-10">
             <h1 className="font-display text-5xl font-bold mb-4 text-gray-900 dark:text-white">CREATE <span className="text-brand">ACCOUNT</span></h1>
             <p className="text-gray-600 dark:text-gray-400 text-lg">
-              Register to join our programs and manage your membership.
+              Register to join our community.
             </p>
           </div>
-
-          {error && (
-            <div className="mb-8 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex flex-col sm:flex-row items-start sm:items-center">
-              <div className="flex items-center mb-2 sm:mb-0">
-                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mr-2 shrink-0" />
-                <span className="font-bold text-red-600 dark:text-red-400 mr-2">Error:</span>
-              </div>
-              {error === 'USER_EXISTS' ? (
-                <div className="text-red-600 dark:text-red-400">
-                  User already exists. <Link to="/login" className="font-bold underline text-brand hover:text-brand-dark ml-1">Sign in?</Link>
-                </div>
-              ) : (
-                <p className="text-red-600 dark:text-red-400">{error}</p>
-              )}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -143,31 +175,17 @@ const ProgramSignup: React.FC = () => {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 mb-2">EMAIL ADDRESS</label>
-                <input 
-                  type="email" 
-                  name="email" 
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full bg-gray-50 dark:bg-brand-gray border border-gray-300 dark:border-gray-700 rounded-lg p-4 text-gray-900 dark:text-white focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition-colors" 
-                  placeholder="jane@example.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 mb-2">PHONE NUMBER</label>
-                <input 
-                  type="tel" 
-                  name="phone" 
-                  required
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full bg-gray-50 dark:bg-brand-gray border border-gray-300 dark:border-gray-700 rounded-lg p-4 text-gray-900 dark:text-white focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition-colors" 
-                  placeholder="(555) 123-4567"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 mb-2">EMAIL ADDRESS</label>
+              <input 
+                type="email" 
+                name="email" 
+                required
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full bg-gray-50 dark:bg-brand-gray border border-gray-300 dark:border-gray-700 rounded-lg p-4 text-gray-900 dark:text-white focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition-colors" 
+                placeholder="jane@example.com"
+              />
             </div>
 
             {/* Authentication Fields */}
@@ -248,49 +266,6 @@ const ProgramSignup: React.FC = () => {
                     )}
                  </div>
               </div>
-            </div>
-
-            <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-white/10">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 mb-2">SELECT PROGRAM</label>
-                  <div className="relative">
-                    <select 
-                      name="program" 
-                      required
-                      value={formData.program}
-                      onChange={handleChange}
-                      className="w-full bg-gray-50 dark:bg-brand-gray border border-gray-300 dark:border-gray-700 rounded-lg p-4 text-gray-900 dark:text-white focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition-colors appearance-none"
-                    >
-                      <option value="">Choose your path...</option>
-                      {PROGRAMS.map(p => <option key={p.id} value={p.title}>{p.title}</option>)}
-                    </select>
-                    <Dumbbell className="absolute right-4 top-4 h-5 w-5 text-gray-500 pointer-events-none" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 mb-2">SELECT MEMBERSHIP</label>
-                  <div className="relative">
-                    <select 
-                      name="membership"
-                      required
-                      value={formData.membership}
-                      onChange={handleChange}
-                      className="w-full bg-gray-50 dark:bg-brand-gray border border-gray-300 dark:border-gray-700 rounded-lg p-4 text-gray-900 dark:text-white focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition-colors appearance-none"
-                    >
-                      <option value="">Choose your plan...</option>
-                      {PRICING_PLANS.map(plan => (
-                        <option key={plan.id} value={plan.name}>
-                          {plan.name} - {plan.price}/month
-                        </option>
-                      ))}
-                    </select>
-                    <CheckCircle className="absolute right-4 top-4 h-5 w-5 text-gray-500 pointer-events-none" />
-                  </div>
-                  <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 text-right">
-                    <Link to="/pricing" className="hover:text-brand underline">View plan details</Link>
-                  </div>
-                </div>
             </div>
 
             <button 

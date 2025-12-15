@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth, storage } from '../firebase';
-import { updateProfile, onAuthStateChanged, User } from 'firebase/auth';
+import { auth, storage, db } from '../firebase';
+import { updateProfile, onAuthStateChanged, User, deleteUser } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { User as UserIcon, Upload, Loader, Save, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
+import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { User as UserIcon, Upload, Loader, Save, ArrowLeft, AlertCircle, CheckCircle, Trash2, X } from 'lucide-react';
+import { PROGRAMS } from '../constants';
 
 const EditProfile: React.FC = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
-  const [displayName, setDisplayName] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    program: ''
+  });
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -16,11 +22,34 @@ const EditProfile: React.FC = () => {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        setDisplayName(currentUser.displayName || '');
-        setPhotoPreview(currentUser.photoURL);
+        
+        try {
+          // Fetch data from Firestore
+          const docRef = doc(db, 'samfit__user', currentUser.uid);
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setFormData({
+              name: data.name || currentUser.displayName || '',
+              phone: data.phone || '',
+              program: data.program || ''
+            });
+            setPhotoPreview(data.photoURL || currentUser.photoURL);
+          } else {
+             // Fallback to auth data
+             setFormData(prev => ({ ...prev, name: currentUser.displayName || '' }));
+             setPhotoPreview(currentUser.photoURL);
+          }
+        } catch (err: any) {
+           console.warn("Could not fetch user profile:", err.code);
+           // Fallback to auth data even if Firestore fails
+           setFormData(prev => ({ ...prev, name: currentUser.displayName || '' }));
+           setPhotoPreview(currentUser.photoURL);
+        }
       } else {
         navigate('/login');
       }
@@ -28,25 +57,53 @@ const EditProfile: React.FC = () => {
     return () => unsubscribe();
   }, [navigate]);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError(null);
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      
-      // Validate size (2MB = 2 * 1024 * 1024 bytes)
       if (file.size > 2 * 1024 * 1024) {
         setError("File size must be less than 2MB.");
         return;
       }
-      
-      // Validate type
       if (!file.type.startsWith('image/')) {
         setError("Please upload an image file.");
         return;
       }
-
       setPhoto(file);
       setPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+      return;
+    }
+
+    if (!user) return;
+    setIsProcessing(true);
+
+    try {
+      // Delete Firestore Document
+      try {
+        await deleteDoc(doc(db, 'samfit__user', user.uid));
+      } catch (e) {
+        // Ignore if document doesn't exist
+      }
+      
+      // Delete Auth User
+      await deleteUser(user);
+      
+      navigate('/');
+    } catch (err: any) {
+      console.error("Delete account error:", err.code || 'unknown');
+      setError("Failed to delete account. You may need to sign out and sign in again.");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -59,26 +116,33 @@ const EditProfile: React.FC = () => {
     if (!user) return;
 
     try {
-      let photoURL = user.photoURL;
+      let photoURL = photoPreview || '';
 
       if (photo) {
-        // Create a unique file name
         const fileRef = ref(storage, `profile_photos/${user.uid}/${Date.now()}_${photo.name}`);
         await uploadBytes(fileRef, photo);
         photoURL = await getDownloadURL(fileRef);
       }
 
+      // Update Firestore
+      await updateDoc(doc(db, 'samfit__user', user.uid), {
+        name: formData.name,
+        phone: formData.phone,
+        program: formData.program,
+        photoURL: photoURL
+      });
+
+      // Update Auth Profile (for consistency in navbar etc)
       await updateProfile(user, {
-        displayName: displayName,
+        displayName: formData.name,
         photoURL: photoURL
       });
 
       setSuccess(true);
-      // Optional: Redirect back to dashboard after short delay
       setTimeout(() => navigate('/dashboard'), 1500);
 
     } catch (err: any) {
-      console.error("Profile update error:", err);
+      console.error("Profile update error:", err.code || 'unknown');
       setError("Failed to update profile. Please try again.");
     } finally {
       setIsProcessing(false);
@@ -95,6 +159,35 @@ const EditProfile: React.FC = () => {
 
   return (
     <div className="pt-20 min-h-screen bg-brand-light dark:bg-brand-black transition-colors duration-300">
+      
+      {/* Notifications Popups */}
+      {error && (
+        <div className="fixed top-24 right-4 left-4 md:left-auto md:right-8 z-50 md:max-w-md animate-[slideIn_0.3s_ease-out]">
+          <div className="bg-white dark:bg-neutral-800 border-l-4 border-red-500 shadow-2xl rounded-r-lg p-4 flex items-start">
+            <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-3 shrink-0" />
+            <div className="flex-grow">
+              <h3 className="text-red-500 font-bold text-sm uppercase">Error</h3>
+              <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">{error}</p>
+            </div>
+            <button onClick={() => setError(null)} className="text-gray-400 hover:text-gray-900 dark:hover:text-white ml-4">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="fixed top-24 right-4 left-4 md:left-auto md:right-8 z-50 md:max-w-md animate-[slideIn_0.3s_ease-out]">
+          <div className="bg-white dark:bg-neutral-800 border-l-4 border-green-500 shadow-2xl rounded-r-lg p-4 flex items-start">
+            <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 shrink-0" />
+            <div className="flex-grow">
+              <h3 className="text-green-500 font-bold text-sm uppercase">Success</h3>
+              <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">Profile updated successfully! Redirecting...</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
           
@@ -110,20 +203,6 @@ const EditProfile: React.FC = () => {
           >
             <h1 className="font-display text-4xl font-bold mb-8 text-gray-900 dark:text-white">EDIT <span className="text-brand">PROFILE</span></h1>
 
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start">
-                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 mr-3 shrink-0" />
-                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-              </div>
-            )}
-
-            {success && (
-              <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-start">
-                <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 mr-3 shrink-0" />
-                <p className="text-sm text-green-600 dark:text-green-400">Profile updated successfully! Redirecting...</p>
-              </div>
-            )}
-
             <form onSubmit={handleSubmit} className="space-y-8">
               
               {/* Photo Upload */}
@@ -135,7 +214,6 @@ const EditProfile: React.FC = () => {
                     <UserIcon className="h-12 w-12 text-brand" />
                   )}
                   
-                  {/* Overlay for hover */}
                   <label className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                     <Upload className="h-8 w-8 text-white" />
                     <input 
@@ -159,16 +237,43 @@ const EditProfile: React.FC = () => {
                 <p className="text-xs text-gray-500 mt-2">Max size: 2MB</p>
               </div>
 
-              {/* Name Input */}
-              <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 mb-2">DISPLAY NAME</label>
-                <input 
-                  type="text" 
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-black/20 border border-gray-300 dark:border-gray-700 rounded-lg p-4 text-gray-900 dark:text-white focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition-colors"
-                  placeholder="Your Name"
-                />
+              {/* Form Fields */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 mb-2">DISPLAY NAME</label>
+                  <input 
+                    type="text" 
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full bg-gray-50 dark:bg-black/20 border border-gray-300 dark:border-gray-700 rounded-lg p-4 text-gray-900 dark:text-white focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 mb-2">PHONE</label>
+                  <input 
+                    type="tel" 
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full bg-gray-50 dark:bg-black/20 border border-gray-300 dark:border-gray-700 rounded-lg p-4 text-gray-900 dark:text-white focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition-colors"
+                    placeholder="(555) 123-4567"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-400 mb-2">PROGRAM</label>
+                  <select 
+                    name="program" 
+                    value={formData.program}
+                    onChange={handleChange}
+                    className="w-full bg-gray-50 dark:bg-black/20 border border-gray-300 dark:border-gray-700 rounded-lg p-4 text-gray-900 dark:text-white focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition-colors appearance-none"
+                  >
+                    <option value="">Select a Program</option>
+                    {PROGRAMS.map(p => <option key={p.id} value={p.title}>{p.title}</option>)}
+                  </select>
+                </div>
               </div>
 
               {/* Submit Button */}
@@ -190,6 +295,16 @@ const EditProfile: React.FC = () => {
                 )}
               </button>
             </form>
+
+            <div className="mt-8 pt-8 border-t border-gray-200 dark:border-white/10">
+              <button 
+                onClick={handleDeleteAccount}
+                disabled={isProcessing}
+                className="flex items-center text-red-600 hover:text-red-700 font-bold uppercase text-sm tracking-wide"
+              >
+                <Trash2 className="h-4 w-4 mr-2" /> Delete Account
+              </button>
+            </div>
           </div>
         </div>
       </div>

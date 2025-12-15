@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { KeyRound, ArrowLeft, Mail, CheckCircle, Loader, AlertCircle } from 'lucide-react';
+import { KeyRound, ArrowLeft, Mail, CheckCircle, Loader, AlertCircle, X } from 'lucide-react';
 import { auth } from '../firebase';
 import { sendPasswordResetEmail } from 'firebase/auth';
 
@@ -58,6 +58,22 @@ const ForgotPassword: React.FC = () => {
 
   return (
     <div className="pt-20">
+      {/* Error Popup */}
+      {error && (
+        <div className="fixed top-24 right-4 left-4 md:left-auto md:right-8 z-50 md:max-w-md animate-[slideIn_0.3s_ease-out]">
+          <div className="bg-white dark:bg-neutral-800 border-l-4 border-red-500 shadow-2xl rounded-r-lg p-4 flex items-start">
+            <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-3 shrink-0" />
+            <div className="flex-grow">
+              <h3 className="text-red-500 font-bold text-sm uppercase">Error</h3>
+              <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">{error}</p>
+            </div>
+            <button onClick={() => setError(null)} className="text-gray-400 hover:text-gray-900 dark:hover:text-white ml-4">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="min-h-screen flex items-center justify-center bg-brand-light dark:bg-brand-black transition-colors duration-300 px-4">
         <div
           className="bg-white dark:bg-brand-gray p-8 md:p-12 rounded-3xl w-full max-w-lg shadow-2xl border border-gray-100 dark:border-white/10"
@@ -73,13 +89,6 @@ const ForgotPassword: React.FC = () => {
             <h1 className="font-display text-4xl font-bold mb-2 text-gray-900 dark:text-white">RESET PASSWORD</h1>
             <p className="text-gray-600 dark:text-gray-400">Enter your email to receive instructions.</p>
           </div>
-
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start">
-              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 mr-3 shrink-0" />
-              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>

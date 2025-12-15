@@ -52,6 +52,39 @@ export const FACILITY_GALLERY = [
   }
 ];
 
+export const TRANSFORMATION_GALLERY = [
+  {
+    id: 1,
+    image: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&q=80&w=800",
+    caption: "PUSH LIMITS"
+  },
+  {
+    id: 2,
+    image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&q=80&w=800",
+    caption: "EXPERT GUIDANCE"
+  },
+  {
+    id: 3,
+    image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&q=80&w=800",
+    caption: "COMMUNITY ENERGY"
+  },
+  {
+    id: 4,
+    image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=800",
+    caption: "MIND & BODY"
+  },
+  {
+    id: 5,
+    image: "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&q=80&w=800",
+    caption: "HIGH INTENSITY"
+  },
+  {
+    id: 6,
+    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800",
+    caption: "STRENGTH"
+  }
+];
+
 export const PROGRAMS: Program[] = [
   {
     id: 1,
@@ -97,6 +130,24 @@ export const TRAINERS: Trainer[] = [
     name: "David Okafor",
     role: "HIIT & Cardio Expert",
     image: "https://images.unsplash.com/photo-1561532325-7d5231a2dede?auto=format&fit=crop&q=80&w=600"
+  },
+  {
+    id: 4,
+    name: "Elena Rodriguez",
+    role: "CrossFit Coach",
+    image: "https://images.unsplash.com/photo-1611672585731-fa10603fb9e0?auto=format&fit=crop&q=80&w=600"
+  },
+  {
+    id: 5,
+    name: "James Wilson",
+    role: "Boxing Instructor",
+    image: "https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?auto=format&fit=crop&q=80&w=600"
+  },
+  {
+    id: 6,
+    name: "Sophie Chen",
+    role: "Nutritionist",
+    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=600"
   }
 ];
 
@@ -188,6 +239,52 @@ export const PRICING_PLANS: PricingPlan[] = [
     name: "VIP",
     price: "$199",
     features: ["All Premium Features", "4 Personal Training Sessions", "Private Locker", "Laundry Service"]
+  }
+];
+
+export const PRICING_FAQS = [
+  {
+    question: "Can I cancel my membership at any time?",
+    answer: "Yes, we offer flexible month-to-month contracts. You can cancel up to 24 hours before your next billing cycle with no hidden fees."
+  },
+  {
+    question: "What is included in the guest pass?",
+    answer: "Guest passes allow you to bring a friend to workout with you. They get full access to the gym floor and locker rooms. Premium and VIP plans include unlimited guest passes."
+  },
+  {
+    question: "Do you offer personal training packages?",
+    answer: "Yes! Our VIP plan includes 4 sessions per month. We also offer separate personal training packages that can be added to any membership level."
+  },
+  {
+    question: "Is the gym open on holidays?",
+    answer: "Samfit is open 24/7, 365 days a year, so you never have to miss a workout, even on holidays."
+  },
+  {
+    question: "Can I freeze my membership if I go on vacation?",
+    answer: "Absolutely. You can freeze your membership for up to 3 months per year for a small maintenance fee."
+  }
+];
+
+export const BOOKING_FAQS = [
+  {
+    question: "Do I need to be a member to book a class?",
+    answer: "While membership guarantees access and better rates, we do offer drop-in passes for non-members for select classes."
+  },
+  {
+    question: "What if I need to cancel my booking?",
+    answer: "You can cancel up to 4 hours before the session starts without penalty. Late cancellations may incur a small fee or forfeit a session credit."
+  },
+  {
+    question: "What should I bring to my session?",
+    answer: "Please bring a water bottle, a towel, and comfortable workout attire. For specific classes like Yoga or Boxing, you may bring your own mat or gloves, though we have rentals available."
+  },
+  {
+    question: "How far in advance can I book?",
+    answer: "Sessions can be booked up to 14 days in advance. Popular slots fill up quickly, so we recommend booking as early as possible."
+  },
+  {
+    question: "Is the gym open on holidays?",
+    answer: "Yes! If a class is full, join the waitlist. If a spot opens up, you'll be automatically enrolled and notified via email."
   }
 ];
 

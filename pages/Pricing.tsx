@@ -1,9 +1,15 @@
-import React from 'react';
-import { Check } from 'lucide-react';
-import { PRICING_PLANS } from '../constants';
+import React, { useState } from 'react';
+import { Check, Plus, Minus } from 'lucide-react';
+import { PRICING_PLANS, PRICING_FAQS } from '../constants';
 import { Link } from 'react-router-dom';
 
 const Pricing: React.FC = () => {
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+
+  const toggleFaq = (index: number) => {
+    setOpenFaqIndex(openFaqIndex === index ? null : index);
+  };
+
   return (
     <div className="pt-20">
       <section className="bg-white dark:bg-brand-black py-20 text-center transition-colors duration-300">
@@ -52,6 +58,35 @@ const Pricing: React.FC = () => {
                 >
                   Join Now
                 </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 bg-white dark:bg-brand-black transition-colors duration-300">
+        <div className="container mx-auto px-4">
+          <h2 className="font-display text-4xl md:text-5xl font-bold text-center mb-12 text-gray-900 dark:text-white">FREQUENTLY ASKED <span className="text-brand">QUESTIONS</span></h2>
+          <div className="max-w-3xl mx-auto space-y-4">
+            {PRICING_FAQS.map((faq, index) => (
+              <div key={index} className="border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden">
+                <button
+                  onClick={() => toggleFaq(index)}
+                  className="w-full flex items-center justify-between p-6 bg-gray-50 dark:bg-brand-gray hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-left focus:outline-none"
+                >
+                  <span className="font-bold text-lg text-gray-900 dark:text-white pr-4">{faq.question}</span>
+                  {openFaqIndex === index ? (
+                    <Minus className="h-5 w-5 text-brand shrink-0" />
+                  ) : (
+                    <Plus className="h-5 w-5 text-brand shrink-0" />
+                  )}
+                </button>
+                <div 
+                  className={`bg-white dark:bg-black/20 px-6 overflow-hidden transition-all duration-300 ease-in-out ${openFaqIndex === index ? 'max-h-48 py-6 opacity-100' : 'max-h-0 py-0 opacity-0'}`}
+                >
+                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{faq.answer}</p>
+                </div>
               </div>
             ))}
           </div>

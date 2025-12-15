@@ -15,6 +15,7 @@ import EditProfile from './pages/EditProfile';
 import EmailVerification from './pages/EmailVerification';
 import ForgotPassword from './pages/ForgotPassword';
 import Payment from './pages/Payment';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Scroll to top on route change
 const ScrollToTop = () => {
@@ -41,6 +42,7 @@ const App: React.FC = () => {
             <Route path="/program-signup" element={<ProgramSignup />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/email-verification" element={<EmailVerification />} />

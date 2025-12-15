@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, CheckCircle, Clock, Users, Trophy } from 'lucide-react';
-import { PROGRAMS, TRAINERS, TESTIMONIALS, HERO_SLIDES } from '../constants';
+import { PROGRAMS, TRAINERS, TESTIMONIALS, HERO_SLIDES, TRANSFORMATION_GALLERY } from '../constants';
+import Stats from '../components/Stats';
 
 const Home: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -59,6 +60,9 @@ const Home: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Stats Section */}
+      <Stats />
 
       {/* Featured Programs */}
       <section className="py-20 bg-white dark:bg-brand-black transition-colors duration-300">
@@ -152,8 +156,8 @@ const Home: React.FC = () => {
             <h2 className="font-display text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">MEET THE <span className="text-brand">TEAM</span></h2>
             <p className="text-gray-600 dark:text-gray-400">Train with the best in the industry.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {TRAINERS.map((trainer, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {TRAINERS.slice(0, 4).map((trainer, index) => (
               <div 
                 key={trainer.id}
                 className="bg-brand-light dark:bg-brand-gray rounded-xl overflow-hidden group shadow-lg"
@@ -202,6 +206,33 @@ const Home: React.FC = () => {
                </div>
              ))}
            </div>
+        </div>
+      </section>
+
+      {/* Moments of Transformation Gallery */}
+      <section className="py-20 bg-white dark:bg-brand-black transition-colors duration-300">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="font-display text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">MOMENTS OF <span className="text-brand">TRANSFORMATION</span></h2>
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">Real people. Real effort. Real results. See what happens inside Samfit.</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {TRANSFORMATION_GALLERY.map((item) => (
+              <div key={item.id} className="relative group overflow-hidden rounded-2xl h-64 md:h-80 cursor-pointer">
+                <img 
+                  src={item.image} 
+                  alt={item.caption} 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                  <p className="text-white font-display text-2xl font-bold tracking-wider transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                    {item.caption}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
