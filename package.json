@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@google/genai": "^0.0.21",
+    "@google/genai": "^1.33.0",
     "@netlify/functions": "^2.6.0"
   },
   "devDependencies": {
