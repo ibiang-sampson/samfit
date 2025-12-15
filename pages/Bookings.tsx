@@ -88,23 +88,9 @@ Samfit Team`;
         console.warn("Could not write to mail collection:", emailError);
       }
 
-      // 3. Generate AI Email Preview (Optional enhancement for UI)
-      let apiKey = undefined;
+      // 3. Generate AI Email Preview (Optional enhancement for UI via Netlify Function)
       try {
-        if (typeof process !== 'undefined' && process.env) {
-          apiKey = process.env.API_KEY;
-        }
-      } catch (err) {
-        // ignore
-      }
-
-      if (apiKey) {
-        try {
-          const { GoogleGenerativeAI } = await import("@google/generative-ai");
-          const genAI = new GoogleGenerativeAI(apiKey);
-          const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-          
-          const prompt = `Write a short, friendly, high-energy confirmation email for a gym session booking. 
+        const prompt = `Write a short, friendly, high-energy confirmation email for a gym session booking. 
               Details:
               - Client: ${formData.name}
               - Class: ${formData.service}
@@ -112,16 +98,20 @@ Samfit Team`;
               - Time: ${formData.time}
               `;
 
-          const result = await model.generateContent(prompt);
-          const response = await result.response;
-          const text = response.text();
+        const response = await fetch('/.netlify/functions/generate-email', {
+          method: 'POST',
+          body: JSON.stringify({ prompt }),
+          headers: { 'Content-Type': 'application/json' }
+        });
 
-          if (text) {
-            finalEmailContent = text;
+        if (response.ok) {
+          const data = await response.json();
+          if (data.text) {
+            finalEmailContent = data.text;
           }
-        } catch (aiError) {
-          console.warn("AI generation failed, using fallback.");
         }
+      } catch (aiError) {
+        console.warn("AI generation failed, using fallback.", aiError);
       }
       
       setEmailPreview(finalEmailContent);
