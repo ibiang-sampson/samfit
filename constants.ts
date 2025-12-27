@@ -1,3 +1,4 @@
+
 import { Program, Service, Trainer, Testimonial, PricingPlan } from './types';
 import { Dumbbell, HeartPulse, Trophy, Users, Clock, Zap, MapPin, Phone, Mail, Instagram, Facebook, Twitter } from 'lucide-react';
 
@@ -156,7 +157,7 @@ export const TESTIMONIALS: Testimonial[] = [
     id: 1,
     name: "Sarah Jenkins",
     role: "Member since 2021",
-    text: "Samfit changed my life. The trainers are incredibly supportive and the community is unmatched.",
+    text: "Jedafit changed my life. The trainers are incredibly supportive and the community is unmatched.",
     rating: 5
   },
   {
@@ -172,6 +173,20 @@ export const TESTIMONIALS: Testimonial[] = [
     role: "Yoga Enthusiast",
     text: "I love the morning yoga classes. It's the perfect way to start my day with energy and focus.",
     rating: 4
+  },
+  {
+    id: 4,
+    name: "Robert Fox",
+    role: "Bodybuilder",
+    text: "The free weights section is massive. I've never had to wait for a squat rack. Serious gym for serious gains.",
+    rating: 5
+  },
+  {
+    id: 5,
+    name: "Emily Carter",
+    role: "Weight Loss Journey",
+    text: "I was intimidated at first, but the community here is so welcoming. Down 30lbs and feeling stronger than ever!",
+    rating: 5
   }
 ];
 
@@ -257,7 +272,7 @@ export const PRICING_FAQS = [
   },
   {
     question: "Is the gym open on holidays?",
-    answer: "Samfit is open 24/7, 365 days a year, so you never have to miss a workout, even on holidays."
+    answer: "Jedafit is open 24/7, 365 days a year, so you never have to miss a workout, even on holidays."
   },
   {
     question: "Can I freeze my membership if I go on vacation?",

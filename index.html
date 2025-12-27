@@ -1,10 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Samfit - Premium Fitness Center</title>
+    <title>Jedafit - Premium Fitness Performance</title>
     <script>
+      // Initialize theme before content loads to prevent flashing
+      const theme = localStorage.getItem('jedafit-theme') || 'dark';
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+
       // Suppress the warning "cdn.tailwindcss.com should not be used in production"
       const originalWarn = console.warn;
       console.warn = function(...args) {
@@ -20,14 +28,11 @@
         theme: {
           extend: {
             colors: {
-              brand: {
-                DEFAULT: '#dc2626', // red-600
-                dark: '#991b1b',    // red-800
-                black: '#171717',   // neutral-900 (used for dark mode bg)
-                gray: '#262626',    // neutral-800 (used for dark mode cards)
-                light: '#f5f5f5',   // neutral-100
-                white: '#ffffff',
-              }
+              brand: '#dc2626', // Red-600
+              'brand-dark': '#991b1b', // Red-800
+              'brand-black': '#171717', // Neutral-900
+              'brand-gray': '#262626', // Neutral-800
+              'brand-light': '#f5f5f5', // Neutral-100
             },
             fontFamily: {
               sans: ['Roboto', 'sans-serif'],
@@ -47,38 +52,64 @@
       }
       ::-webkit-scrollbar-thumb {
         background: #dc2626;
-        border-radius: 4px;
+        border-radius: 10px;
       }
       ::-webkit-scrollbar-thumb:hover {
         background: #991b1b;
       }
       
-      /* Smooth theme transition */
       body {
-        transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+        transition-property: color, background-color, border-color;
         transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
         transition-duration: 300ms;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .glass-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+      }
+      .dark .glass-card {
+        background: rgba(38, 38, 38, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .brand-gradient {
+        background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+      }
+
+      .text-gradient {
+        background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      ::selection {
+        background: #dc2626;
+        color: white;
       }
     </style>
   <script type="importmap">
 {
   "imports": {
-    "@netlify/functions": "https://esm.sh/@netlify/functions@^5.1.1",
-    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "firebase/": "https://esm.sh/firebase@^12.7.0/",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react-router-dom": "https://esm.sh/react-router-dom@^7.10.1",
     "vite": "https://esm.sh/vite@^7.3.0",
-    "firebase/": "https://esm.sh/firebase@^12.6.0/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
     "framer-motion": "https://esm.sh/framer-motion@^12.23.26",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
     "react/": "https://esm.sh/react@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
-    "lucide-react": "https://esm.sh/lucide-react@^0.561.0"
+    "@netlify/functions": "https://esm.sh/@netlify/functions@^5.1.1"
   }
 }
 </script>
 </head>
-  <body class="bg-white text-gray-900 dark:bg-neutral-900 dark:text-white">
+  <body class="bg-white text-gray-900 dark:bg-brand-black dark:text-white">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

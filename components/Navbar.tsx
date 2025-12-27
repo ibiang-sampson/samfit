@@ -14,11 +14,16 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check initial system preference or class
-    if (document.documentElement.classList.contains('dark')) {
+    // Initial theme check
+    const savedTheme = localStorage.getItem('jedafit-theme');
+    const hasDarkClass = document.documentElement.classList.contains('dark');
+    
+    if (savedTheme === 'dark' || (!savedTheme && hasDarkClass)) {
       setIsDark(true);
+      document.documentElement.classList.add('dark');
     } else {
       setIsDark(false);
+      document.documentElement.classList.remove('dark');
     }
 
     const handleScroll = () => {
@@ -42,9 +47,11 @@ const Navbar: React.FC = () => {
     if (html.classList.contains('dark')) {
       html.classList.remove('dark');
       setIsDark(false);
+      localStorage.setItem('jedafit-theme', 'light');
     } else {
       html.classList.add('dark');
       setIsDark(true);
+      localStorage.setItem('jedafit-theme', 'dark');
     }
   };
 
@@ -70,10 +77,9 @@ const Navbar: React.FC = () => {
           <div className="flex items-center space-x-4">
             <NavLink to="/" className="flex items-center space-x-2 group">
               <Dumbbell className="h-8 w-8 text-brand transition-transform group-hover:rotate-12" />
-              <span className="font-display text-3xl font-bold tracking-wider text-gray-900 dark:text-white">SAM<span className="text-brand">FIT</span></span>
+              <span className="font-display text-3xl font-bold tracking-wider text-gray-900 dark:text-white">JEDA<span className="text-brand">FIT</span></span>
             </NavLink>
             
-            {/* Mobile Dashboard Icon (visible only when logged in on mobile) */}
             {user && (
               <NavLink 
                 to="/dashboard" 
@@ -85,7 +91,6 @@ const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
             <div className="flex items-baseline space-x-8">
               {NAV_LINKS.map((link) => (
@@ -143,7 +148,6 @@ const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-4">
              <button 
               onClick={toggleTheme}
@@ -161,7 +165,6 @@ const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
       {isOpen && (
         <div
           className="md:hidden bg-white dark:bg-brand-black border-b border-gray-200 dark:border-brand-gray overflow-hidden"

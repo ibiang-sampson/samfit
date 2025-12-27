@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Dumbbell, Instagram, Facebook, Twitter, Mail, Phone, MapPin } from 'lucide-react';
@@ -11,7 +12,7 @@ const Footer: React.FC = () => {
           <div>
             <div className="flex items-center space-x-2 mb-6">
               <Dumbbell className="h-6 w-6 text-brand" />
-              <span className="font-display text-2xl font-bold tracking-wider text-gray-900 dark:text-white">SAM<span className="text-brand">FIT</span></span>
+              <span className="font-display text-2xl font-bold tracking-wider text-gray-900 dark:text-white">JEDA<span className="text-brand">FIT</span></span>
             </div>
             <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
               We are a premium fitness center dedicated to helping you achieve your physical potential through expert coaching and top-tier facilities.
@@ -59,14 +60,14 @@ const Footer: React.FC = () => {
               </li>
               <li className="flex items-center space-x-3 text-gray-600 dark:text-gray-400">
                 <Mail className="h-5 w-5 text-brand shrink-0" />
-                <span>hello@samfit.com</span>
+                <span>hello@jedafit.com</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-gray-200 dark:border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-500 text-sm">© {new Date().getFullYear()} Samfit. All rights reserved.</p>
+          <p className="text-gray-500 text-sm">© {new Date().getFullYear()} Jedafit. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-gray-500 hover:text-brand text-sm">Privacy Policy</a>
             <a href="#" className="text-gray-500 hover:text-brand text-sm">Terms of Service</a>

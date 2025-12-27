@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle, Loader, Upload, AlertCircle, Eye, EyeOff, Lock, User as UserIcon, X } from 'lucide-react';
-import { auth, storage } from '../firebase';
+import { auth, storage, db } from '../firebase';
 import { createUserWithEmailAndPassword, sendEmailVerification, signOut, GoogleAuthProvider, signInWithPopup, updateProfile } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 const ProgramSignup: React.FC = () => {
   const navigate = useNavigate();
@@ -35,14 +36,26 @@ const ProgramSignup: React.FC = () => {
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Create user document in Firestore for Google Sign In users if it doesn't exist
+      // Note: We usually handle this check in Login or here. 
+      // Since Google Sign In automatically logs them in, we create the doc here.
+      await setDoc(doc(db, 'users', user.uid), {
+        name: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+        role: 'member',
+        createdAt: serverTimestamp(),
+      }, { merge: true });
+
       navigate('/dashboard');
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
         return; 
       }
 
-      // Log only safe properties to avoid circular structure errors
       console.error("Google Sign Up Error:", err.code ? err.code : "Unknown", err.message ? err.message : "");
       
       if (err.code === 'auth/unauthorized-domain') {
@@ -94,10 +107,21 @@ const ProgramSignup: React.FC = () => {
         }
       }
 
-      // Update profile with name and photo
+      // Update Auth Profile
       await updateProfile(user, { 
         displayName: formData.name,
         photoURL: photoURL
+      });
+
+      // Create Firestore Document
+      await setDoc(doc(db, 'users', user.uid), {
+        name: formData.name,
+        email: formData.email,
+        photoURL: photoURL,
+        phone: '', // Placeholder
+        program: '', // Placeholder
+        role: 'member',
+        createdAt: serverTimestamp(),
       });
       
       // Send verification email
@@ -110,7 +134,6 @@ const ProgramSignup: React.FC = () => {
       navigate('/email-verification', { state: { email: formData.email } });
 
     } catch (err: any) {
-      // Log only safe properties to prevent circular JSON error
       const errorCode = err.code || 'unknown';
       const errorMessage = err.message || 'Unknown error';
       console.error("Registration error:", errorCode, errorMessage);

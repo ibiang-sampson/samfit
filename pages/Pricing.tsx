@@ -1,10 +1,21 @@
-import React, { useState } from 'react';
-import { Check, Plus, Minus } from 'lucide-react';
+
+import React, { useState, useEffect } from 'react';
+import { Check, Plus, Minus, Zap } from 'lucide-react';
 import { PRICING_PLANS, PRICING_FAQS } from '../constants';
 import { Link } from 'react-router-dom';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const Pricing: React.FC = () => {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const toggleFaq = (index: number) => {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
@@ -14,49 +25,50 @@ const Pricing: React.FC = () => {
     <div className="pt-20">
       <section className="bg-white dark:bg-brand-black py-20 text-center transition-colors duration-300">
         <div className="container mx-auto px-4">
-          <h1 className="font-display text-6xl md:text-8xl font-bold mb-6 text-gray-900 dark:text-white">MEMBERSHIP <span className="text-brand">PLANS</span></h1>
-          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto text-lg">
-            Invest in yourself. Choose the plan that fits your lifestyle.
+          <h1 className="font-display text-6xl md:text-8xl font-bold mb-6 text-gray-900 dark:text-white uppercase tracking-tight">INVEST IN <span className="text-gradient">YOU</span></h1>
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto text-xl font-light">
+            Choose the tier that matches your commitment level. No limits.
           </p>
         </div>
       </section>
 
-      <section className="py-20 bg-brand-light dark:bg-brand-gray transition-colors duration-300">
+      <section className="py-20 bg-brand-light dark:bg-brand-black transition-colors duration-300">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {PRICING_PLANS.map((plan, index) => (
+            {PRICING_PLANS.map((plan) => (
               <div
                 key={plan.id}
-                className={`relative rounded-2xl p-8 flex flex-col h-full shadow-xl transition-all ${plan.isPopular ? 'bg-brand text-white transform md:-translate-y-4 shadow-brand/20' : 'bg-white dark:bg-brand-black border border-gray-100 dark:border-white/10'}`}
+                className={`relative rounded-3xl p-8 flex flex-col h-full transition-all duration-500 overflow-hidden ${plan.isPopular ? 'brand-gradient text-white transform md:-translate-y-6 shadow-2xl shadow-brand/30 scale-105' : 'glass-card border border-white/5 text-white shadow-xl'}`}
               >
                 {plan.isPopular && (
-                  <div className="absolute top-0 right-0 bg-black text-white text-xs font-bold px-3 py-1 uppercase rounded-bl-lg rounded-tr-lg">
-                    Most Popular
+                  <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white text-[10px] font-black px-3 py-1 uppercase tracking-widest rounded-full flex items-center">
+                    <Zap className="w-3 h-3 mr-1 fill-current" />
+                    Recommended
                   </div>
                 )}
-                <h3 className={`font-display text-3xl font-bold mb-2 ${plan.isPopular ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{plan.name}</h3>
+                <h3 className="font-display text-4xl font-bold mb-2 uppercase tracking-tight">{plan.name}</h3>
                 <div className="flex items-baseline mb-8">
-                  <span className={`text-4xl font-bold ${plan.isPopular ? 'text-white' : 'text-brand'}`}>{plan.price}</span>
-                  <span className={`ml-2 text-sm ${plan.isPopular ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}`}>/month</span>
+                  <span className="text-5xl font-bold">{plan.price}</span>
+                  <span className={`ml-2 text-xs font-bold uppercase tracking-widest ${plan.isPopular ? 'text-white/60' : 'text-gray-500'}`}>/month</span>
                 </div>
-                <ul className="space-y-4 mb-8 flex-grow">
+                <ul className="space-y-4 mb-10 flex-grow">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start">
                       <Check className={`h-5 w-5 mr-3 shrink-0 ${plan.isPopular ? 'text-white' : 'text-brand'}`} />
-                      <span className={`text-sm ${plan.isPopular ? 'text-white/90' : 'text-gray-600 dark:text-gray-300'}`}>{feature}</span>
+                      <span className={`text-sm font-light ${plan.isPopular ? 'text-white/90' : 'text-gray-400'}`}>{feature}</span>
                     </li>
                   ))}
                 </ul>
                 <Link 
-                  to="/program-signup"
-                  state={{ membershipPlan: plan.name }}
-                  className={`w-full py-3 rounded-full font-bold uppercase tracking-wider text-center transition-all ${
+                  to={user ? "/payment" : "/program-signup"}
+                  state={user ? { plan } : { membershipPlan: plan.name }}
+                  className={`w-full py-4 rounded-full font-bold uppercase tracking-widest text-sm text-center transition-all ${
                     plan.isPopular 
-                      ? 'bg-black text-white hover:bg-gray-800' 
-                      : 'bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white hover:bg-brand hover:text-white dark:hover:bg-brand dark:hover:text-white'
+                      ? 'bg-white text-brand hover:bg-gray-100' 
+                      : 'bg-white/5 hover:bg-brand hover:text-white border border-white/10'
                   }`}
                 >
-                  Join Now
+                  {user ? 'Select Plan' : 'Join Jedafit'}
                 </Link>
               </div>
             ))}
@@ -65,17 +77,17 @@ const Pricing: React.FC = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 bg-white dark:bg-brand-black transition-colors duration-300">
+      <section className="py-24 bg-white dark:bg-brand-black transition-colors duration-300">
         <div className="container mx-auto px-4">
-          <h2 className="font-display text-4xl md:text-5xl font-bold text-center mb-12 text-gray-900 dark:text-white">FREQUENTLY ASKED <span className="text-brand">QUESTIONS</span></h2>
+          <h2 className="font-display text-4xl md:text-5xl font-bold text-center mb-12 text-gray-900 dark:text-white uppercase tracking-tight">FREQUENTLY ASKED <span className="text-brand">GUIDANCE</span></h2>
           <div className="max-w-3xl mx-auto space-y-4">
             {PRICING_FAQS.map((faq, index) => (
-              <div key={index} className="border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden">
+              <div key={index} className="glass-card border border-white/5 rounded-3xl overflow-hidden shadow-lg transition-all hover:border-brand/30">
                 <button
                   onClick={() => toggleFaq(index)}
-                  className="w-full flex items-center justify-between p-6 bg-gray-50 dark:bg-brand-gray hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-left focus:outline-none"
+                  className="w-full flex items-center justify-between p-7 hover:bg-white/5 transition-colors text-left focus:outline-none"
                 >
-                  <span className="font-bold text-lg text-gray-900 dark:text-white pr-4">{faq.question}</span>
+                  <span className="font-bold text-lg text-gray-900 dark:text-white pr-4 uppercase tracking-tight">{faq.question}</span>
                   {openFaqIndex === index ? (
                     <Minus className="h-5 w-5 text-brand shrink-0" />
                   ) : (
@@ -83,9 +95,9 @@ const Pricing: React.FC = () => {
                   )}
                 </button>
                 <div 
-                  className={`bg-white dark:bg-black/20 px-6 overflow-hidden transition-all duration-300 ease-in-out ${openFaqIndex === index ? 'max-h-48 py-6 opacity-100' : 'max-h-0 py-0 opacity-0'}`}
+                  className={`px-7 overflow-hidden transition-all duration-300 ease-in-out ${openFaqIndex === index ? 'max-h-64 py-7 opacity-100 border-t border-white/5' : 'max-h-0 py-0 opacity-0'}`}
                 >
-                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{faq.answer}</p>
+                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed font-light">{faq.answer}</p>
                 </div>
               </div>
             ))}

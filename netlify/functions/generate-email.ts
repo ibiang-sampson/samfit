@@ -26,11 +26,13 @@ export default async (req: Request, context: Context) => {
         }
 
         const ai = new GoogleGenAI({ apiKey });
+        // Updated model to gemini-3-flash-preview for better reasoning and latest features
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: prompt,
         });
 
+        // SDK access .text property directly
         return new Response(JSON.stringify({ text: response.text }), {
             headers: { "Content-Type": "application/json" }
         });

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Target, Heart, Users, MessageSquare, ArrowRight, Shield, Globe } from 'lucide-react';
 import { TRAINERS } from '../constants';
@@ -20,7 +21,7 @@ const About: React.FC = () => {
               </h1>
               <div className="space-y-6 text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
                 <p>
-                  Samfit is more than just a gym; it is a movement dedicated to the pursuit of physical and mental excellence. Founded on the belief that strength belongs to everyone, we have cultivated a space where beginners and elite athletes alike can push their boundaries without judgment.
+                  Jedafit is more than just a gym; it is a movement dedicated to the pursuit of physical and mental excellence. Founded on the belief that strength belongs to everyone, we have cultivated a space where beginners and elite athletes alike can push their boundaries without judgment.
                 </p>
                 <p>
                   Our facility is not merely a collection of weights and machines—it is a laboratory for personal transformation. We combine old-school grit with modern sports science to provide an environment that demands your best and supports you every step of the way. 
@@ -34,7 +35,7 @@ const About: React.FC = () => {
               <div className="absolute inset-0 bg-brand transform rotate-3 rounded-2xl opacity-20 translate-x-4 translate-y-4"></div>
               <img 
                 src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&q=80&w=1200" 
-                alt="Samfit Team Group Photo" 
+                alt="Jedafit Team Group Photo" 
                 className="relative rounded-2xl shadow-2xl w-full h-[400px] md:h-[500px] object-cover grayscale hover:grayscale-0 transition-all duration-700"
               />
             </div>

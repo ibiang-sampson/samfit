@@ -27,8 +27,8 @@ const EditProfile: React.FC = () => {
         setUser(currentUser);
         
         try {
-          // Fetch data from Firestore
-          const docRef = doc(db, 'samfit__user', currentUser.uid);
+          // Fetch data from Firestore 'users' collection
+          const docRef = doc(db, 'users', currentUser.uid);
           const docSnap = await getDoc(docRef);
           
           if (docSnap.exists()) {
@@ -88,9 +88,9 @@ const EditProfile: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      // Delete Firestore Document
+      // Delete Firestore Document from 'users'
       try {
-        await deleteDoc(doc(db, 'samfit__user', user.uid));
+        await deleteDoc(doc(db, 'users', user.uid));
       } catch (e) {
         // Ignore if document doesn't exist
       }
@@ -124,8 +124,8 @@ const EditProfile: React.FC = () => {
         photoURL = await getDownloadURL(fileRef);
       }
 
-      // Update Firestore
-      await updateDoc(doc(db, 'samfit__user', user.uid), {
+      // Update Firestore 'users' collection
+      await updateDoc(doc(db, 'users', user.uid), {
         name: formData.name,
         phone: formData.phone,
         program: formData.program,
